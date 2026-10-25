@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<!-- No network requests allowed: no external scripts, styles, fonts, images or fetch/XHR. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex, nofollow">
+<!-- The bot replaces https://buymeacoffee.com/dualcyclone with an https:// link, or with nothing to hide all coffee bits. -->
+<meta name="coffee-url" content="https://buymeacoffee.com/dualcyclone">
+<title>Tesla bot – connecting</title>
+<style>
+  :root {
+    --bg:#f7f7f5; --card:#ffffff; --text:#1c1c1e; --muted:#5f6368; --border:#e2e2e0;
+    --accent:#0b57d0; --accent-text:#ffffff; --ok:#137333; --ok-bg:#e6f4ea;
+    --err:#b3261e; --err-bg:#fce8e6; --field:#f1f3f4; --focus:#0b57d0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#121214; --card:#1d1d20; --text:#ececee; --muted:#a8a8ad; --border:#2e2e33;
+      --accent:#8ab4f8; --accent-text:#0b1d3a; --ok:#81c995; --ok-bg:#1e3a27;
+      --err:#f2b8b5; --err-bg:#3c1f1d; --field:#26262a; --focus:#8ab4f8;
+    }
+  }
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); }
+  main { max-width:36rem; margin:0 auto; padding:2rem 1.1rem 3rem; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:1.4rem 1.25rem; }
+  .badge { display:inline-flex; align-items:center; justify-content:center; width:3rem; height:3rem; border-radius:50%; font-size:1.5rem; margin-bottom:.6rem; }
+  .badge.ok { background:var(--ok-bg); color:var(--ok); }
+  .badge.err { background:var(--err-bg); color:var(--err); }
+  .badge.info { background:var(--field); }
+  h1 { font-size:1.55rem; line-height:1.2; margin:0 0 .5rem; }
+  p { margin:.5rem 0; }
+  .muted { color:var(--muted); font-size:.92rem; }
+  label { display:block; font-weight:600; margin:1rem 0 .35rem; }
+  textarea {
+    width:100%; min-height:7.5rem; resize:vertical; padding:.75rem; border-radius:12px;
+    border:1px solid var(--border); background:var(--field); color:var(--text);
+    font:.85rem/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; word-break:break-all;
+  }
+  button, .btn {
+    -webkit-appearance:none; appearance:none; display:inline-flex; align-items:center; justify-content:center;
+    min-height:48px; padding:.7rem 1.2rem; border-radius:12px; border:1px solid transparent;
+    font:600 1rem/1.2 inherit; font-family:inherit; cursor:pointer; text-decoration:none;
+  }
+  .primary { width:100%; margin-top:.75rem; font-size:1.1rem; min-height:56px; background:var(--accent); color:var(--accent-text); }
+  .secondary { background:transparent; color:var(--text); border-color:var(--border); }
+  button:focus-visible, .btn:focus-visible, a:focus-visible, textarea:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+  .status { min-height:1.5em; margin:.5rem 0 0; font-weight:600; color:var(--ok); }
+  .status.warn { color:var(--err); }
+  .instruction { margin-top:.9rem; padding:.75rem .9rem; border-radius:12px; background:var(--field); }
+  .coffee { margin:1rem 0 0; font-size:.92rem; text-align:center; }
+  a { color:var(--accent); }
+  .thanks { margin-top:1rem; padding:1rem; border-radius:14px; border:1px dashed var(--border); text-align:center; }
+  .thanks p { margin:0 0 .75rem; }
+  .row { display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; }
+  .row .btn, .row button { flex:1 1 8rem; }
+  .yes { background:var(--accent); color:var(--accent-text); }
+  code { font:.85rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  [hidden] { display:none !important; }
+  @media (prefers-reduced-motion: no-preference) { .thanks:not([hidden]) { animation:fade .25s ease-out; } }
+  @keyframes fade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+</style>
+</head>
+<body>
+<main>
+  <!-- Success -->
+  <section id="state-success" class="card" hidden aria-labelledby="success-title">
+    <div class="badge ok" aria-hidden="true">✓</div>
+    <h1 id="success-title">You're connected</h1>
+    <p>Tesla has sent you back with a one-time code. Your bot needs the full link below to finish setting up.</p>
+
+    <label for="callback-url">Your callback link</label>
+    <textarea id="callback-url" readonly spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="instruction"></textarea>
+    <button id="copy-btn" class="primary" type="button">Copy</button>
+    <p id="copy-status" class="status" role="status" aria-live="polite"></p>
+
+    <p id="instruction" class="instruction">Paste this into the secure field your bot gave you. It expires in a few minutes.</p>
+
+    <p id="coffee-link" class="coffee" data-coffee hidden>
+      <a data-coffee-link href="#" target="_blank" rel="noopener noreferrer">Saved you some faff? ☕ Buy me a coffee</a>
+    </p>
+
+    <div id="thanks" class="thanks" data-coffee hidden role="region" aria-label="Optional coffee tip">
+      <p>Thanks! Fancy buying me a coffee?</p>
+      <div class="row">
+        <a id="thanks-yes" class="btn yes" data-coffee-link href="#" target="_blank" rel="noopener noreferrer">Yes ☕</a>
+        <button id="thanks-no" class="secondary" type="button">No thanks</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Error -->
+  <section id="state-error" class="card" hidden aria-labelledby="error-title">
+    <div class="badge err" aria-hidden="true">!</div>
+    <h1 id="error-title">That didn't quite work</h1>
+    <p id="error-message">No harm done. Please go back to your bot and start the connection again.</p>
+    <p class="muted">Tesla said: <code id="error-code"></code></p>
+  </section>
+
+  <!-- No code -->
+  <section id="state-empty" class="card" aria-labelledby="empty-title">
+    <div class="badge info" aria-hidden="true">🔑</div>
+    <h1 id="empty-title">Tesla bot sign-in page</h1>
+    <p>This page is where Tesla sends you back after you approve access for your personal Tesla bot. When that happens, it shows a link for you to copy back into your bot.</p>
+    <p>There's no code here right now, so there's nothing to do. If you were expecting one, go back to your bot and start the connection again.</p>
+    <p class="muted">Everything on this page happens in your browser. It has no scripts from anywhere else, no cookies or trackers, and it sends nothing anywhere.</p>
+  </section>
+  <noscript><p class="muted" style="margin-top:1rem">JavaScript is off, so this page can't show your link. You can copy the whole address from your browser's address bar instead.</p></noscript>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var params = new URLSearchParams(window.location.search);
+  var code = params.get("code");
+  var error = params.get("error");
+  var $ = function (id) { return document.getElementById(id); };
+
+  // Coffee link: only shown when the placeholder was replaced with a real https:// URL.
+  var meta = document.querySelector('meta[name="coffee-url"]');
+  var coffeeUrl = meta ? (meta.getAttribute("content") || "").trim() : "";
+  var coffeeOn = /^https:\/\/[^\s"'<>]+$/i.test(coffeeUrl) && coffeeUrl.indexOf("{{") === -1;
+  if (coffeeOn) {
+    document.querySelectorAll("[data-coffee-link]").forEach(function (a) { a.href = coffeeUrl; });
+    $("coffee-link").hidden = false; // the thanks prompt stays hidden until a successful copy
+  } else {
+    document.querySelectorAll("[data-coffee], [data-coffee-link]").forEach(function (el) { el.hidden = true; el.remove(); });
+  }
+
+  function show(id) {
+    ["state-success", "state-error", "state-empty"].forEach(function (s) { $(s).hidden = (s !== id); });
+  }
+
+  if (error) {
+    show("state-error");
+    var friendly = {
+      access_denied: "It looks like access wasn't approved, which is completely fine. When you're ready, go back to your bot and try again.",
+      login_required: "Tesla needs you to sign in first. Go back to your bot and try again.",
+      invalid_request: "Something was off with the request. Go back to your bot and start again.",
+      server_error: "Tesla had a hiccup on their side. Give it a moment, then go back to your bot and try again.",
+      temporarily_unavailable: "Tesla is busy right now. Give it a moment, then go back to your bot and try again."
+    };
+    $("error-message").textContent = friendly[error] ||
+      "No harm done. Please go back to your bot and start the connection again.";
+    $("error-code").textContent = error.slice(0, 64);
+    return;
+  }
+
+  if (!code) { show("state-empty"); return; }
+
+  show("state-success");
+  var box = $("callback-url");
+  box.value = window.location.href;
+  var status = $("copy-status");
+  var thanks = $("thanks");
+  var thanksShown = false;
+
+  function copied() {
+    status.classList.remove("warn");
+    status.textContent = "Copied! Now paste it into your bot.";
+    $("copy-btn").textContent = "Copied ✓";
+    setTimeout(function () { $("copy-btn").textContent = "Copy again"; }, 2500);
+    if (coffeeOn && thanks && !thanksShown) { thanksShown = true; thanks.hidden = false; }
+  }
+  function failed() {
+    box.focus(); box.select();
+    status.classList.add("warn");
+    status.textContent = "Couldn't copy automatically. The link is selected, so copy it by hand.";
+  }
+  function fallbackCopy() {
+    try {
+      box.focus(); box.select(); box.setSelectionRange(0, box.value.length);
+      if (document.execCommand && document.execCommand("copy")) { copied(); } else { failed(); }
+    } catch (e) { failed(); }
+  }
+
+  $("copy-btn").addEventListener("click", function () {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(box.value).then(copied, fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  });
+  box.addEventListener("focus", function () { box.select(); });
+
+  if (thanks) {
+    $("thanks-yes").addEventListener("click", function () { thanks.hidden = true; });
+    $("thanks-no").addEventListener("click", function () { thanks.hidden = true; $("copy-btn").focus(); });
+  }
+})();
+</script>
+</body>
+</html>
